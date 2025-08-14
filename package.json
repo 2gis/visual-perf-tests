@@ -1,0 +1,30 @@
+{
+  "name": "visual-perf-tests",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "vite --host 0.0.0.0",
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "test": "npm run build && node dist/runner.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^20",
+    "typescript": "^5.5.4",
+    "vite": "^5.3.5"
+  },
+  "dependencies": {
+    "@2gis/mapgl": "^1.49.0",
+    "@types/dat.gui": "^0.7.7",
+    "base64-arraybuffer": "^1.0.1",
+    "dat.gui": "^0.7.7",
+    "describe-it-browser": "^1.0.12",
+    "pbf": "^3.2.1",
+    "puppeteer": "^10.2.0",
+    "tslib": "^2.3.1"
+  }
+}
