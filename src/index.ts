@@ -33,7 +33,8 @@ const params = {
     warmup: false,
     graphicsPreset: 'immersive',
     immersiveRoads: true,
-    styleId: 'eb10e2c3-3c28-4b81-b74b-859c9c4cf47e'
+    styleId: 'eb10e2c3-3c28-4b81-b74b-859c9c4cf47e',
+    customMapOptions: '{}',
 }
 
 const log = async (msg: any) => {
@@ -44,7 +45,7 @@ const log = async (msg: any) => {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ type: 'log', msg }),
         });
-    }   
+    }
 }
 const finish = async (success: boolean, results: any) => {
     console.log('finish', success, results);
@@ -67,7 +68,13 @@ function performTest(mapUrl: string, test: TestFunction) {
             mapInstance.destroy();
         }
         load(mapUrl).then(mapgl => {
-            const map = mapInstance = (window as any).map = new mapgl.Map('map', {
+            let customOptions = {};
+            try {
+                customOptions = JSON.parse(params.customMapOptions);
+            } catch (e) {
+                console.warn('Invalid custom map options JSON:', e);
+            }
+            const mapOptions = {
                 key,
                 zoomControl: 'bottomRight',
                 enableTrackResize: true,
@@ -77,8 +84,12 @@ function performTest(mapUrl: string, test: TestFunction) {
                     immersiveRoadsOn: params.immersiveRoads,
                     graphicsPreset: params.graphicsPreset,
                 },
-                zoom: 16
-            });
+                maxPitch: 85,
+                zoom: 16,
+                ...customOptions,
+            };
+            console.log(mapOptions);
+            const map = mapInstance = (window as any).map = new mapgl.Map('map', mapOptions as any);
             const jmap = (map as any)._impl;
             log('Testing ' + (mapUrl || 'production'));
             test(jmap).then(resolve);
@@ -184,5 +195,41 @@ ui.add(params, 'graphicsPreset', graphicsPresets);
 ui.add(params, 'immersiveRoads');
 ui.add(params, 'iterations');
 ui.add(params, 'warmup');
+
+const customOptionsFolder = ui.addFolder('Map custom options');
+const optionsController = customOptionsFolder.add(params, 'customMapOptions').name('JSON options');
+
+// Replace single-line input with a textarea
+const controllerEl = optionsController.domElement;
+const li = controllerEl.closest('li') as HTMLElement;
+if (li) {
+    const ul = li.closest('ul') as HTMLElement;
+    const updateHeight = () => {
+        li.style.height = ul && !ul.classList.contains('closed') ? 'auto' : '';
+    };
+    updateHeight();
+    if (ul) {
+        new MutationObserver(updateHeight).observe(ul, { attributes: true, attributeFilter: ['class'] });
+    }
+}
+const input = controllerEl.querySelector('input');
+if (input) {
+    const textarea = document.createElement('textarea');
+    textarea.value = params.customMapOptions;
+    textarea.rows = 6;
+    textarea.style.width = '100%';
+    textarea.style.resize = 'vertical';
+    textarea.style.fontFamily = 'monospace';
+    textarea.style.fontSize = '11px';
+    textarea.style.background = '#303030';
+    textarea.style.color = '#eee';
+    textarea.style.border = '1px solid #555';
+    textarea.style.padding = '4px';
+    textarea.addEventListener('input', () => {
+        params.customMapOptions = textarea.value;
+    });
+    textarea.addEventListener('keydown', (e) => e.stopPropagation());
+    input.replaceWith(textarea);
+}
 
 createUI(ui);
